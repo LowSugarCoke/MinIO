@@ -1,5 +1,7 @@
 # Minio Log Uploader
 
+![flow chart](https://raw.githubusercontent.com/LowSugarCoke/MinIO/main/flow_chart.png)
+
 This program automatically uploads log files from your local machine to the Minio object storage service. It performs the following functions:
 
 - Import necessary packages (Minio uploader, log processor, log judge, etc.).
