@@ -1,7 +1,7 @@
 """
-作者: Mina
-日期: 2023-02-20
-版權: TSMC
+Author: Mina
+Date: 2023-02-20
+Copyright: TSMC
 """
 
 import boto3
@@ -10,21 +10,21 @@ from botocore.exceptions import EndpointConnectionError
 
 class MinioUploader:
   """
-    這個類定義了一個 MinioUploader 對象，它提供了上傳文件到 S3 存儲桶的功能。
+    This class defines a MinioUploader object that provides the functionality to upload files to an S3 bucket.
     """
 
   def __init__(self, access_key, secret_key, endpoint_url, bucket_name):
     """
-        初始化 MinioUploader 對象的連線，並設定 S3 端點網址、AWS 存取金鑰和 bucket 名稱。
+        Initializes the MinioUploader object's connection and sets the S3 endpoint URL, AWS access key, and bucket name.
 
         Args:
-            access_key (str): AWS 存取金鑰
-            secret_key (str): AWS 秘密存取金鑰
-            endpoint_url (str): S3 端點網址
-            bucket_name (str): S3 存儲桶名稱
+            access_key (str): AWS access key
+            secret_key (str): AWS secret access key
+            endpoint_url (str): S3 endpoint URL
+            bucket_name (str): S3 bucket name
 
         Raises:
-            EndpointConnectionError: 連接 Minio endpoint 失敗時引發
+            EndpointConnectionError: raised when connecting to the Minio endpoint fails
         """
     try:
       self.s3 = boto3.resource('s3',
@@ -38,14 +38,13 @@ class MinioUploader:
 
   def upload_files(self, minio_folder, update_files):
     """
-        上傳文件到 S3 存儲桶中的指定路徑下。
+        Uploads files to the specified path in the S3 bucket.
 
         Args:
-            minio_folder (str): 要上傳的路徑
-            update_files (dict): 要更新的文件名和路徑的字典
-
+            minio_folder (str): the path to upload to
+            update_files (dict): a dictionary of file names and paths to update
         """
-    # 使用 for 迴圈來走訪字典
+    # Use a for loop to iterate over the dictionary
     for toolname, files in update_files.items():
       for file in files:
         file_name = file[0]

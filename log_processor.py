@@ -1,94 +1,96 @@
 """
-作者: Mina
-日期: 2023-02-20
-版權: TSMC
+Author: Mina
+Date: 2023-02-20
+Copyright: TSMC
 """
 
-import re  # 正則表達式庫，用於匹配檔案名稱
-import os  # 操作系統庫，用於取得檔案創建時間
-from datetime import datetime, date  # 日期時間庫，用於處理日期
+import re  # Regular expression library used for matching file names
+import os  # Operating system library used for getting file creation time
+from datetime import datetime, date  # Date and time library used for date processing
 from log_compressor import LogCompressor
 
 
 class LogProcessor:
 
   def __init__(self):
-    self.tool_names = ""  # 存放 tool names
-    self.regex = ""  # 用來匹配檔案名稱的正則表達式
+    self.tool_names = ""  # Store tool names
+    self.regex = ""  # Regular expression used for matching file names
     self.log_compressor = LogCompressor()
 
   def read_toolname(self, tool_names_path):
     """
-    從給定的檔案中讀取ToolName。
+    Read ToolName from the given file.
 
     Args:
-        tool_names_path: 包含ToolName的檔案路徑。
+        tool_names_path: The path of the file containing ToolName.
 
     Returns:
         None
     """
-    # 讀取 tool names
+    # Read tool names
     with open(tool_names_path) as f:
-      self.tool_names = f.read().splitlines()  # 將 tool names 存入列表
-    # 構造匹配檔案名稱的正則表達式，使用 '|' 將所有 tool names 串聯在一起
-    self.regex =  re.compile("^(\w+)/(%s)[._]"  % "|".join(self.tool_names))
+      self.tool_names = f.read().splitlines()  # Store tool names in a list
+    # Construct the regular expression used for matching file names by concatenating all tool names with '|'
+    self.regex = re.compile("^(\w+)/(%s)[._]" % "|".join(self.tool_names))
 
-  
   def classify_files_by_toolname(self, files):
     """
-    將檔案按照ToolName和創建日期分類。
+    Classify files by ToolName and creation date.
 
     Args:
-        files: 包含檔案名稱的列表。
+        files: A list of file names.
 
     Returns:
-        一個字典，包含按照ToolName和創建日期分類的檔案。
-        字典的 key 是ToolName，value 是一個字典，其 key 是創建日期，value 是該日期創建的檔案列表。
+        A dictionary containing files classified by ToolName and creation date.
+        The key of the dictionary is the ToolName and the value is another dictionary.
+        The key of the inner dictionary is the creation date and the value is a list of file paths created on that date.
     """
-    
-    # 初始化結果字典，使用字典推導式創建
+
+    # Initialize a dictionary to store the results using a dictionary comprehension
     results = {tool_name: [] for tool_name in self.tool_names}
 
-    # 遍歷檔案列表，將檔案名稱和創建日期存入結果列表
+    # Iterate over the list of file names and store the file name and creation date in the results list
     for filename in files:
-      match = self.regex.match(filename)  # 使用正則表達式進行匹配
-      if match:  # 如果匹配成功
-        tool_name = match.group(2)  # 提取 tool name
-        
-        created_time = datetime.fromtimestamp(
-          os.path.getctime(filename)).date()  # 取得檔案創建時間，並轉換為日期
-        # 將檔案名稱與創建日期以 tuple 的形式存入結果列表
+      match = self.regex.match(
+        filename)  # Use the regular expression to match the file name
+      if match:  # If the match is successful
+        tool_name = match.group(2)  # Extract the tool name
+
+        created_time = datetime.fromtimestamp(os.path.getctime(filename)).date(
+        )  # Get the file creation time and convert it to a date
+        # Store the file name and creation date as a tuple in the results list
         results[tool_name].append((created_time, filename))
 
-
-    results = self.__classify_files_by_date(results)  # 將結果按日期進行分類
+    results = self.__classify_files_by_date(
+      results)  # Classify the results by date
 
     return results
 
   def __classify_files_by_date(self, results):
     """
-    將按照ToolName分類的檔案進一步按照創建日期進行分類。
+    Further classify the files by creation date under each ToolName.
 
     Args:
-        results: 一個字典，包含按照ToolName分類的檔案。
+        results: A dictionary containing the files classified by ToolName.
 
     Returns:
-        一個字典，包含按照ToolName和創建日期分類的檔案。
-        字典的 key 是ToolName，value 是一個字典，其 key 是創建日期，value 是該日期創建的檔案列表。
+        A dictionary containing the files classified by ToolName and creation date.
+        The key of the dictionary is ToolName, and the value is another dictionary with
+        the key as creation date and the value as a list of files created on that date.
     """
-    
-    # 初始化分類後的結果字典
+
+    # Initialize the output dictionary with ToolName as the key
     output = {tool_name: {} for tool_name in self.tool_names}
 
-    # 對每個 tool name 的結果進行分類
+    # Classify the results by date for each ToolName
     for tool_name in results:
       date_dict = {}
       for created_date, filename in results[tool_name]:
         if created_date not in date_dict:
-          # 如果該日期不存在，則新建一個列表存放檔案名稱
+          # If the date does not exist, create a new list to store the file names
           date_dict[created_date] = [filename]
         else:
-          # 如果該日期已存在，則將檔案名稱加入對應的列表中
+          # If the date already exists, append the file name to the corresponding list
           date_dict[created_date].append(filename)
       output[tool_name] = date_dict
 
@@ -96,20 +98,21 @@ class LogProcessor:
 
   def get_compress_files(self, input):
     """
-    將按照ToolName和創建日期分類的檔案壓縮到一個文件中。
+    Compress the files classified by ToolName and creation date into one file.
 
     Args:
-        input: 一個字典，包含按照ToolName和創建日期分類的檔案。
+        input: A dictionary containing the files classified by ToolName and creation date.
 
     Returns:
-        一個字典，包含壓縮後的檔案。
-        字典的 key 是壓縮後的檔案路徑，value 是壓縮前的檔案列表。
+        A dictionary containing the compressed files.
+        The key of the dictionary is the compressed file path, and the value is a list of
+        files that were compressed.
     """
     return self.log_compressor.compress_same_day_files(input)
 
   def delete_compressed_folder(self):
     """
-    刪除已經壓縮的檔案。
+    Delete the compressed files.
 
     Args:
         None
@@ -118,32 +121,33 @@ class LogProcessor:
         None
     """
     self.log_compressor.delete_compress_folder()
-  
-  def get_no_compress_name_files(self, input, local_src_path ):
+
+  def get_no_compress_name_files(self, input, local_src_path):
     """
-    取得不需要進行壓縮的檔案。
+    Get the files that do not need to be compressed.
 
     Args:
-        input: 一個字典，包含按照ToolName和創建日期分類的檔案。
-        local_src_path: 本地檔案路徑。
+        input: A dictionary containing the files classified by ToolName and creation date.
+        local_src_path: The local file path.
 
     Returns:
-        一個字典，包含不需要進行壓縮的檔案。
-        字典的 key 是ToolName，value 是一個列表，其元素是一個列表，包含檔案名稱和路徑。
+        A dictionary containing the files that do not need to be compressed.
+        The key of the dictionary is ToolName, and the value is a list of lists.
+        Each list contains the file name and path.
     """
 
     no_compress_file = {}
-    # 遍歷按照ToolName和創建日期分類的檔案
+    # Traverse through the files classified by ToolName and creation date
     for toolname, date_files in input.items():
       for files in date_files.items():
-        # 如果只有一個檔案，則不需要進行壓縮
+        # If there is only one file, it does not need to be compressed
         if len(files) == 1:
-          # 將檔案名稱中的本地檔案路徑替換為空字串
-          file_name = files[0].replace(local_src_path,"")
-          # 如果該ToolName已經存在於 no_compress_file 中，則將檔案名稱和路徑加入其對應的列表中
+          # Replace the local file path with an empty string in the file name
+          file_name = files[0].replace(local_src_path, "")
+          # If the ToolName already exists in no_compress_file, append the file name and path
           if toolname in no_compress_file:
-            no_compress_file[toolname].append([file_name,files[0]] )
-          # 如果該ToolName不存在於 no_compress_file 中，則創建一個新的列表，並將檔案名稱和路徑加入其中
+            no_compress_file[toolname].append([file_name, files[0]])
+          # If the ToolName does not exist in no_compress_file, create a new list and add the file name and path
           else:
-            no_compress_file[toolname] = [[ file_name,files[0] ]]
+            no_compress_file[toolname] = [[file_name, files[0]]]
     return no_compress_file
