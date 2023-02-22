@@ -36,7 +36,6 @@ class LogProcessor:
       self.tool_names = f.read().splitlines()  # Store tool names in a list
     # Construct the regular expression used for matching file names by concatenating all tool names with '|'
     self.tool_name_parser = ToolNameParser(self.tool_names)
-    # self.regex = re.compile("^(\w+)/(%s)[._]" % "|".join(self.tool_names))
 
   def classify_files_by_toolname(self, files):
     """
@@ -146,11 +145,8 @@ class LogProcessor:
     for toolname, date_files in input.items():
       for files in date_files.items():
         # If there is only one file, it does not need to be compressed
-        # print("dates", date_files)
-        # print("files", files)
-        # print("files size", len(files[1]))
+
         if len(files[1]) == 1:
-          # print("hi")
           # Replace the local file path with an empty string in the file name
           file_name = files[1][0].replace(local_src_path, "")
           # If the ToolName already exists in no_compress_file, append the file name and path
