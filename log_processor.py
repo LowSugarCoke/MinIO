@@ -8,6 +8,8 @@ import re  # Regular expression library used for matching file names
 import os  # Operating system library used for getting file creation time
 from datetime import datetime, date  # Date and time library used for date processing
 from log_compressor import LogCompressor
+from tool_name_parser import ToolNameParser
+from date_capture import DateCapture
 
 
 class LogProcessor:
@@ -16,6 +18,8 @@ class LogProcessor:
     self.tool_names = ""  # Store tool names
     self.regex = ""  # Regular expression used for matching file names
     self.log_compressor = LogCompressor()
+    self.tool_name_parser = ""
+    self.date_capture = DateCapture()
 
   def read_toolname(self, tool_names_path):
     """
@@ -31,7 +35,8 @@ class LogProcessor:
     with open(tool_names_path) as f:
       self.tool_names = f.read().splitlines()  # Store tool names in a list
     # Construct the regular expression used for matching file names by concatenating all tool names with '|'
-    self.regex = re.compile("^(\w+)/(%s)[._]" % "|".join(self.tool_names))
+    self.tool_name_parser = ToolNameParser(self.tool_names)
+    # self.regex = re.compile("^(\w+)/(%s)[._]" % "|".join(self.tool_names))
 
   def classify_files_by_toolname(self, files):
     """
@@ -51,15 +56,15 @@ class LogProcessor:
 
     # Iterate over the list of file names and store the file name and creation date in the results list
     for filename in files:
-      match = self.regex.match(
-        filename)  # Use the regular expression to match the file name
-      if match:  # If the match is successful
-        tool_name = match.group(2)  # Extract the tool name
 
-        created_time = datetime.fromtimestamp(os.path.getctime(filename)).date(
-        )  # Get the file creation time and convert it to a date
+      tool_name = self.tool_name_parser.parser_file(filename)
+      if tool_name =="No Tool Name":
+            continue
+      
+      created_time = self.date_capture.extract_date(filename).date()
+
         # Store the file name and creation date as a tuple in the results list
-        results[tool_name].append((created_time, filename))
+      results[tool_name].append((created_time, filename))
 
     results = self.__classify_files_by_date(
       results)  # Classify the results by date
@@ -141,13 +146,18 @@ class LogProcessor:
     for toolname, date_files in input.items():
       for files in date_files.items():
         # If there is only one file, it does not need to be compressed
-        if len(files) == 1:
+        # print("dates", date_files)
+        # print("files", files)
+        # print("files size", len(files[1]))
+        if len(files[1]) == 1:
+          # print("hi")
           # Replace the local file path with an empty string in the file name
-          file_name = files[0].replace(local_src_path, "")
+          file_name = files[1][0].replace(local_src_path, "")
           # If the ToolName already exists in no_compress_file, append the file name and path
           if toolname in no_compress_file:
-            no_compress_file[toolname].append([file_name, files[0]])
+            no_compress_file[toolname].append([file_name, files[1][0]])
           # If the ToolName does not exist in no_compress_file, create a new list and add the file name and path
           else:
-            no_compress_file[toolname] = [[file_name, files[0]]]
+            no_compress_file[toolname] = [[file_name, files[1][0]]]
     return no_compress_file
+

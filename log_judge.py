@@ -6,12 +6,14 @@ Copyright: TSMC
 # import necessary modules
 import os
 import datetime
+from date_capture import DateCapture
 
 
 # Define a LogJudge class for handling log data
 class LogJudge:
 
   def __init__(self):
+    self.date_capture = DateCapture()
     pass
 
   def is_folder_size_above_5_g(self, folder_path):
@@ -72,7 +74,7 @@ class LogJudge:
     for dirpath, dirnames, filenames in os.walk(folder_path):
       for f in filenames:
         if self.__is_file_above_two_days(os.path.join(folder_path, f)):
-          output.append(f)
+          output.append(folder_path + f)
     return output
 
   def __is_file_above_two_days(self, file):
@@ -85,12 +87,13 @@ class LogJudge:
     Returns:
         True if the file was created more than two days ago, False otherwise.
     """
-
-    # Get the stat info of the file
-    stat_info = os.stat(file)
+    file_date = self.date_capture.extract_date(file)
+    if file_date == "No Date":
+          print(f"{file} no date")
+          return False
 
     # Get the creation time of the file
-    created_time = datetime.datetime.fromtimestamp(stat_info.st_ctime).date()
+    created_time = file_date.date()
 
     # Get the current time
     now = datetime.datetime.now().date()

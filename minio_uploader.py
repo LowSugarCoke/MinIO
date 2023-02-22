@@ -49,5 +49,8 @@ class MinioUploader:
       for file in files:
         file_name = file[0]
         file_path = file[1]
-        self.s3.Object(self.bucket,
-                       minio_folder + '/' + file_name).upload_file(file_path)
+        try:
+          self.s3.Object(self.bucket, minio_folder + '/' + toolname+'/' + file_name).upload_file(file_path)
+          print(f"{file_name} update to MinIO succesffully")
+        except:
+          print(f"{file_path} update to MinIO failed")

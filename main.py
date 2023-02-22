@@ -52,8 +52,17 @@ def main():
     # Get the files that do not need to be compressed
     no_compress_files = log_processor.get_no_compress_name_files(
       classify_files, local_src_path)
+
     # Add files to the upload list
-    to_update_files = {**compress_files, **no_compress_files}
+    to_update_files = compress_files.copy()
+    for key, value in no_compress_files.items():
+      if key in to_update_files:
+          to_update_files[key] += value
+      else:
+          to_update_files[key] = value    
+
+    print("Update files as below:")
+    print(to_update_files)
 
     # Upload files to Minio
     minio_client.upload_files(minio_folder, to_update_files)
@@ -64,3 +73,4 @@ def main():
 
 if __name__ == '__main__':
   main()
+

@@ -42,6 +42,7 @@ class LogCompressor:
     for toolname, date_files in result_files.items():
       for date, files in date_files.items():
         if len(files) > 1:
+          
           archive_filename = f'{compress_folder}/{toolname}_{date}.log.tar.gz'
           command = f"tar -cf {archive_filename} {' '.join(files)}"
           subprocess.call(command, shell=True)
@@ -52,5 +53,6 @@ class LogCompressor:
             compressed_files[toolname] = [[
               f'{toolname}_{date}.log.tar.gz', archive_filename
             ]]
+          print(f"Compress files:{files} into \"{archive_filename}\"")
 
     return compressed_files
