@@ -32,7 +32,7 @@ class MinioUploader:
                                aws_access_key_id=access_key,
                                aws_secret_access_key=secret_key)
       self.bucket = self.s3.Bucket(bucket_name)
-      self.bucket.name = bucket_name
+      self.bucket_name = bucket_name
     except EndpointConnectionError as e:
       print(f"Connection to Minio endpoint {endpoint_url} failed: {e}")
       self.s3 = None
@@ -51,7 +51,7 @@ class MinioUploader:
         file_name = file[0]
         file_path = file[1]
         try:
-          self.s3.Object(self.bucket.name, minio_folder + '/' + toolname+'/' + file_name).upload_file(file_path)
+          self.s3.Object(self.bucket_name, minio_folder + '/' + toolname+'/' + file_name).upload_file(file_path)
           print(f"{file_name} update to MinIO succesffully")
         except:
           print(f"{file_path} update to MinIO failed")
